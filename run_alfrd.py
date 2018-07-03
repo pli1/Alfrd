@@ -9,7 +9,8 @@ sys.path.append('/home/pi/Alfrd/yolo')
 import darknet_v2
 sys.path.append('/home/pi/Alfrd/mongodb')
 import mongodb_connection as db
-
+sys.path.append('/home/pi/Alfrd/led/python/examples')
+from led_function import *
 
 def cleanAndExit():
     print ("Cleaning...")
@@ -55,9 +56,12 @@ while True:
         
         # Prints the weight. Comment if you're debbuging the MSB and LSB issue.
         #kl-this is the original
-        #val = hx.get_weight(5)
-        print -hx.get_weight(5)
+        #this works....
+        val = hx.get_weight(5)
+        #print -hx.get_weight(5)
+        #val = max(0,int(-hx.get_weight(5)))
         val = max(0,int(-hx.get_weight(5)))
+        
         if prev<=50:
             t_prev=prev
         else:
@@ -66,25 +70,35 @@ while True:
         if count==-1:
             print "Initiating..."
             print "Scale Ready..."
+            colorWipe(strip, Color(200,200,200), wait_ms=50)
         
         if (val-prev<=t_prev*0.05 and val-prev>=t_prev*-0.05):
             count+=1
 
             if (count<3) and (prev!=0):
                 print "Measuring..."
+                dim(strip,wait_ms=5)
             #added (prev>0) to get the camera to not take a picture when its zero
             elif (count==3) and (prev>0):
                 print "Weight Aquired: "+str(val)+" g"
-                #camera.take_a_photo()
-                #darknet_v2.performDetect()
+                dim(strip,wait_ms=5)
                 
+                camera.take_a_photo()
+                dim(strip,wait_ms=5)
+                darknet_v2.performDetect()
+                showalllight(strip, Color(20,20,200), wait_ms=20, iterations=1)
+                time.sleep(5)
+                colorWipe(strip, Color(0,0,0), wait_ms=10)
         else:
             count=0
             prev=val
             print "Measuring..."
+            dim(strip,wait_ms=5)
 
         hx.reset()
         time.sleep(0.001)
         
     except (KeyboardInterrupt, SystemExit):
+        colorWipe(strip, Color(0,0,0), wait_ms=10)
         cleanAndExit()
+
