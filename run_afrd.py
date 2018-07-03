@@ -56,7 +56,8 @@ while True:
         # Prints the weight. Comment if you're debbuging the MSB and LSB issue.
         #kl-this is the original
         #val = hx.get_weight(5)
-        val = max(0,int(hx.get_weight(3)))
+        #print -hx.get_weight(5)
+        val = max(0,int(-hx.get_weight(5)))
         if prev<=50:
             t_prev=prev
         else:
@@ -87,3 +88,4 @@ while True:
         
     except (KeyboardInterrupt, SystemExit):
         cleanAndExit()
+
