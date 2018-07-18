@@ -1,18 +1,7 @@
 import RPi.GPIO as GPIO
 import time
 import sys
-sys.path.append('/home/pi/Alfrd/scale')
-from hx711 import HX711
-sys.path.append('/home/pi/Alfrd/camera')
-import camera
-sys.path.append('/home/pi/Alfrd/yolo')
-import darknet_v2
-sys.path.append('/home/pi/Alfrd/mongodb')
-import mongodb_connection as db
-import RPi.GPIO as GPIO
-import time
-import sys
-import multiprocessing
+import thread
 import numpy as np
 sys.path.append('/home/pi/Alfrd/scale')
 from hx711 import HX711
@@ -39,11 +28,10 @@ def _ss(data):
 
 print "initiating"
 def led_initiating():
-    colorWipe(strip, Color(255,255,255), wait_ms=100)
+    colorWipe(strip, Color(255,255,255), wait_ms=10)
     colorWipe(strip, Color(0,0,0), wait_ms=1)
-
-p = multiprocessing.Process(target = led_initiating)
-p.start()
+    
+thread.start_new_thread(led_initiating,())
 
 print "."
 hx = HX711(5, 6)
@@ -74,15 +62,7 @@ hx.tare()
 weight_list=[0,0,0]
 initial_weight=np.mean(weight_list)
 print "Ready"
-p.join()
-showalllight(strip, Color(250,5,250), wait_ms=2, iterations=1)
-time.sleep(2)
-colorWipe(strip, Color(0,0,0), wait_ms=2)
 
-def detect_obj():
-    camera.take_a_photo()
-    darknet_v2.performDetect()
-    
 
 while True:
     try:
@@ -97,55 +77,38 @@ while True:
         #kl-this is the original
         #this works....
         
-        val = hx.get_weight(3)
+        val = hx.get_weight(5)
         #print weight_list
         weight_list=weight_list[1:]
         weight_list.append(val)
         #print weight_list
         #print np.mean(weight_list)
-
-        def check_weight():
-            print 'current weight'+str(np.mean(weight_list))
-            print 'previous weight'+str(initial_weight)
-            print 'weight changed from last detected weight'+str(abs(np.mean(weight_list)-initial_weight))
-            print str(1+initial_weight*0.05)
-            print abs(np.mean(weight_list)-initial_weight)<=abs(2+initial_weight*0.05)
-        def fun2():
-            while True:
-                dim(strip,wait_ms=3)
-                
-        #check_weight()
         if abs(_ss(weight_list))<1:
             #Stable weight captured
-            if abs(np.mean(weight_list)-initial_weight)<=abs(2+initial_weight*0.05):
+            if abs(np.mean(weight_list)-initial_weight)<=1+initial_weight*0.05:
                 #weight doesn't change
-                pass
+                continue
             else:
                 print "new weight detected"
+                dim(strip,wait_ms=3)
+                print weight_list
+                print np.mean(weight_list)
                 initial_weight=np.mean(weight_list)
-                p = multiprocessing.Process(target = fun2)
-                q = multiprocessing.Process(target = detect_obj)
-                
-                q.start()
-                p.start()
-
-                
-                #dim(strip,wait_ms=3)
-                #print weight_list
-                #print np.mean(weight_list)
-                
                 #dim(strip,wait_ms=5)
-                
-                
-                q.join()
-                p.terminate()
+                #camera.take_a_photo()
+                #dim(strip,wait_ms=5)
+                #darknet_v2.performDetect()
                 showalllight(strip, Color(20,20,200), wait_ms=2, iterations=1)
                 time.sleep(2)
                 colorWipe(strip, Color(0,0,0), wait_ms=2)
                 
         else:
-            print "measuring"
-                
+            def fun1():
+                print "measuring"
+            def fun2():
+                dim(strip,wait_ms=3)
+            thread.start_new_thread(fun1,())
+            thread.start_new_thread(fun2,())
 
         hx.reset()
         time.sleep(0.001)
@@ -153,3 +116,4 @@ while True:
     except (KeyboardInterrupt, SystemExit):
         colorWipe(strip, Color(0,0,0), wait_ms=10)
         cleanAndExit()
+
