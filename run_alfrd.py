@@ -21,7 +21,7 @@ import camera
 sys.path.append('/home/pi/Alfrd/yolo')
 import darknet_v2
 sys.path.append('/home/pi/Alfrd/mongodb')
-import mongodb_connection as db
+import mongodb_connection as mgdb
 sys.path.append('/home/pi/Alfrd/led/python/examples')
 from led_function import *
 
@@ -81,8 +81,16 @@ colorWipe(strip, Color(0,0,0), wait_ms=2)
 
 def detect_obj():
     camera.take_a_photo()
-    darknet_v2.performDetect()
-    
+    all_results=darknet_v2.performDetect()
+    objs=all_results[1]
+    return objs
+
+def detect_n_upload(weight):
+    objs=detect_obj()
+    mgdb.insert_status(weight,objs)
+    all_I_have=mgdb.get_all_status()
+    mgdb.get_item_change(all_I_have)
+    return 0
 
 while True:
     try:
@@ -124,7 +132,7 @@ while True:
                 print "new weight detected"
                 initial_weight=np.mean(weight_list)
                 p = multiprocessing.Process(target = fun2)
-                q = multiprocessing.Process(target = detect_obj)
+                q = multiprocessing.Process(target = detect_n_upload,args=(np.mean(weight_list),))
                 
                 q.start()
                 p.start()
@@ -132,7 +140,7 @@ while True:
                 
                 #dim(strip,wait_ms=3)
                 #print weight_list
-                #print np.mean(weight_list)
+                print np.mean(weight_list)
                 
                 #dim(strip,wait_ms=5)
                 
