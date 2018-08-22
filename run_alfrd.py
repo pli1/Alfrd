@@ -87,9 +87,7 @@ def detect_obj():
 
 def detect_n_upload(weight):
     objs=detect_obj()
-    mgdb.insert_status(weight,objs)
-    all_I_have=mgdb.get_all_status()
-    mgdb.get_item_change(all_I_have)
+    mgdb.populate_3_tables(weight,objs)
     return 0
 
 while True:
