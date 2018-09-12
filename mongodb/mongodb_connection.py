@@ -108,4 +108,4 @@ def populate_3_tables(weight,obj):
             db.catalog.update_one({'object':this_obj},{'$set':{'inventory_level':0}})
         # Otherwise, nothing changed, do nothing
         else:
-            print "quanty changed"
+            print ("quanty changed")
