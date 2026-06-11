@@ -1,4 +1,4 @@
-# ALFRD — Automated Inventory Management System
+# ALFRD — A Smart Inventory Management System
 
 ALFRD is a personal IoT project that automates inventory tracking using a Raspberry Pi, a weight sensor, and computer vision. It detects when items are added to or removed from a shelf, identifies what those items are, and logs real-time inventory levels to a cloud database — no manual scanning or counting required.
 
@@ -10,8 +10,8 @@ ALFRD is a personal IoT project that automates inventory tracking using a Raspbe
 
 1. **Weight detection** — An HX711 load cell sensor continuously monitors the shelf weight. When a stable change is detected (beyond a noise threshold), it triggers a capture event.
 2. **Object recognition** — A camera photo is taken and run through a TensorFlow SSD MobileNet v2 model (90 COCO classes) to identify what items are present.
-3. **Inventory update** — Results are uploaded to MongoDB Atlas. Inventory percentage is calculated as `current weight / max recorded weight × 100%` and the catalog is auto-updated.
-4. **Visual feedback** — A WS2812 RGB LED strip provides real-time status: white on startup, breathing blue while processing, solid blue on detection complete.
+3. **Visual feedback** — A WS2812 RGB LED strip signals each stage: solid white on startup, breathing blue once a weight change is detected (capture in progress), and a solid blue flash when detection and upload are complete. The strip then turns off until the next event.
+4. **Inventory update** — Results are uploaded to MongoDB Atlas. Inventory percentage is calculated as `current weight / max recorded weight × 100%` and the catalog is auto-updated.
 
 ## Tech Stack
 

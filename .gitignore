@@ -1,0 +1,25 @@
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.eggs/
+venv/
+env/
+.venv/
+
+# Captured images (runtime artifacts, not source)
+picture.jpg
+
+# Test output
+.pytest_cache/
+.coverage
+
+# Claude Code session files
+.claude/

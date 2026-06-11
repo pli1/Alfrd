@@ -1,0 +1,10 @@
+numpy
+pymongo
+Pillow
+tensorflow
+opencv-python
+picamera
+RPi.GPIO
+rpi-ws281x
+python-dotenv
+pytest
