@@ -1,7 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "PowerShell(C:\\\\Users\\\\lipin\\\\anaconda3\\\\python.exe -m pip install git-filter-repo)"
-    ]
-  }
-}
