@@ -20,3 +20,6 @@ picture.jpg
 # Test output
 .pytest_cache/
 .coverage
+
+# Claude Code session files
+.claude/

@@ -1,6 +1,6 @@
 import sys
 import time
-import multiprocessing
+import threading
 
 import numpy as np
 import RPi.GPIO as GPIO
@@ -23,8 +23,8 @@ def _led_startup(strip):
     colorWipe(strip, Color(0, 0, 0), wait_ms=1)
 
 
-def _led_processing(strip):
-    while True:
+def _led_processing(strip, stop_event):
+    while not stop_event.is_set():
         dim(strip, wait_ms=3)
 
 
@@ -38,7 +38,7 @@ def _detect_and_upload(weight, detector):
 def run():
     strip = init_strip()
 
-    startup = multiprocessing.Process(target=_led_startup, args=(strip,))
+    startup = threading.Thread(target=_led_startup, args=(strip,))
     startup.start()
 
     hx = HX711(dout=config.SCALE_DOUT_PIN, pd_sck=config.SCALE_SCK_PIN)
@@ -69,13 +69,15 @@ def run():
                     print(f"Weight change detected: {current:.1f}g (was {baseline:.1f}g)")
                     baseline = current
 
-                    processing = multiprocessing.Process(target=_led_processing, args=(strip,))
+                    stop_event = threading.Event()
+                    processing = threading.Thread(target=_led_processing, args=(strip, stop_event))
                     processing.start()
 
                     objs = _detect_and_upload(current, detector)
                     print(f"Detected: {objs}")
 
-                    processing.terminate()
+                    stop_event.set()
+                    processing.join()
                     showalllight(strip, Color(20, 20, 200), wait_ms=2)
                     time.sleep(2)
                     colorWipe(strip, Color(0, 0, 0), wait_ms=2)

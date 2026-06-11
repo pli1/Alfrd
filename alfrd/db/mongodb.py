@@ -2,8 +2,16 @@ import datetime
 import pymongo
 import config
 
-_client = pymongo.MongoClient(config.MONGODB_URI)
-_db = _client.dev
+_client = None
+_db = None
+
+
+def _get_db():
+    global _client, _db
+    if _db is None:
+        _client = pymongo.MongoClient(config.MONGODB_URI)
+        _db = _client.dev
+    return _db
 
 
 def _get_all(collection):
@@ -11,7 +19,7 @@ def _get_all(collection):
 
 
 def _insert_status(weight, obj):
-    _db.status.insert_one({
+    _get_db().status.insert_one({
         "timestamp": datetime.datetime.now(),
         "weight": weight,
         "object": obj if isinstance(obj, list) else [obj],
@@ -50,32 +58,33 @@ def _find_in_catalog(obj_name, catalog):
 def populate_3_tables(weight, obj):
     _insert_status(weight, obj)
 
-    all_status = _get_all(_db.status)
-    all_catalog = _get_all(_db.catalog)
+    db = _get_db()
+    all_status = _get_all(db.status)
+    all_catalog = _get_all(db.catalog)
 
     if len(all_status) == 1:
-        _db.inventory.insert_one({"weight": weight, "object": obj[0]})
-        _db.catalog.insert_one({"object": obj[0], "max_weight_captured": weight, "inventory_level": 100})
+        db.inventory.insert_one({"weight": weight, "object": obj[0]})
+        db.catalog.insert_one({"object": obj[0], "max_weight_captured": weight, "inventory_level": 100})
         return
 
     change_type, this_obj, change_weight = _identify_change(all_status)
 
     if change_type == "Added":
-        _db.inventory.insert_one({"weight": change_weight, "object": this_obj})
+        db.inventory.insert_one({"weight": change_weight, "object": this_obj})
         catalog_entry = _find_in_catalog(this_obj, all_catalog)
         if catalog_entry:
             max_w = catalog_entry["max_weight_captured"]
             if change_weight > max_w:
-                _db.catalog.update_one(
+                db.catalog.update_one(
                     {"object": this_obj},
                     {"$set": {"max_weight_captured": change_weight, "inventory_level": 100}},
                 )
             else:
                 level = float(change_weight) / float(max_w) * 100
-                _db.catalog.update_one({"object": this_obj}, {"$set": {"inventory_level": level}})
+                db.catalog.update_one({"object": this_obj}, {"$set": {"inventory_level": level}})
         else:
-            _db.catalog.insert_one({"object": this_obj, "max_weight_captured": change_weight, "inventory_level": 100})
+            db.catalog.insert_one({"object": this_obj, "max_weight_captured": change_weight, "inventory_level": 100})
 
     elif change_type == "Removed":
-        _db.inventory.delete_one({"object": this_obj})
-        _db.catalog.update_one({"object": this_obj}, {"$set": {"inventory_level": 0}})
+        db.inventory.delete_one({"object": this_obj})
+        db.catalog.update_one({"object": this_obj}, {"$set": {"inventory_level": 0}})
